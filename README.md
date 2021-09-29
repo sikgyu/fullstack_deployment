@@ -14,6 +14,7 @@ sudo vi /etc/sudoers
 %sudo ALL=(ALL:ALL) NOPASSWD: ALL
 
 3. copy ssh key
+
 wsl
 ssh-keygen -t rsa -f PRIVATE_KEY
 man ssh-copy-id
