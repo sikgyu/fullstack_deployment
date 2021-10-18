@@ -1,0 +1,41 @@
+---
+- hosts: frontend #should match vm name
+  vars:
+    frontend_folder: frontend
+  task:
+    - name: Download NodeJS
+      get_url:
+        url: curl -fsSL https://deb.nodesource.com/setup_14.x
+        dest: /home/vagrant/install_nodejs.sh
+      register: nodejs_download_script #attribute .change
+    - name: Run the installaton script
+      become: true
+      shell: bash /home/vagrant/install_nodejs.sh
+      when: nodejs_download_script.changed #specify condition when it's true, run
+    - name: Nginx #description
+      become: true #root privilege 중요
+      package:
+        name: nginx
+        state: present
+    - name: Make sure the git repo is cloned
+      git:
+        repo: https://github.com/bezkoder/react-crud-web-api.git
+        force: yes
+        dest: /home/vagrant/{{ frontend_folder }} #jinja
+    - name: Make sure that NodeJS is installed
+      become: true
+      package:
+        name: nodejs
+        state: present
+    - name: Install packages for the frontend app
+      community.general.npm:
+        path: /home/vagrant/frontend
+    - name: make sure that http-common.js is modified
+      path: /home/vagrant/frontend/src/http-common.js
+      regexp: 'baseURL: "http://localhost:8080/api"'
+      replace: 'baseURL: "/api"'
+    - name: Make sure default Nginx config is updated
+      become: true
+      template:
+        src: /files/frontend/nginx.conf
+        dest: /etc/nginx/sites-available/default

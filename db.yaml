@@ -1,0 +1,20 @@
+---
+- hosts: db
+  vars:
+    db_host: localhost
+  task:
+    - name: db_init.sql file transfer
+      become: true
+      template:
+        src: /files/backend/db_init.sql
+        dest: /home/vagrant
+      register: db_init.sql
+    - name: db.config.js file transfer
+      become: true
+      template:
+        src: /files/backend/db.config.js
+        dest: /home/vagrant/backend/app/config/db.config.js
+    - name: database init
+      become: true
+      shell: mysql -u root < /home/vagrant/db_init.sql
+      when: db_init.sql.changed
