@@ -11,7 +11,7 @@ Vagrant.configure("2") do |config|
 
     config.vm.synced_folder ".", "/vagrant", disabled: true
 
-    config.vm.boot_timeout = 600
+    config.vm.boot_timeout = 6000
 
     config.vm.provider "virtualbox" do |vb|
         vb.gui = true
@@ -26,7 +26,7 @@ Vagrant.configure("2") do |config|
         end
         backend.vm.hostname = "backend.bcit.local"
         backend.vm.network "private_network", ip: "192.168.150.10"
-	backend.vm.network "forwarded_port", guest: 80, host: 8080
+	backend.vm.network "forwarded_port", guest: 3306, host: 12002
         backend.vm.provision "file", source: "./files/backend/db_init.sql", destination: "/home/vagrant/db_init.sql"
         backend.vm.provision "file", source: "./files/backend/db.config.js", destination: "/home/vagrant/db.config.js"
         backend.vm.provision "file", source: "./files/backend/deploy.service", destination: "/home/vagrant/deploy.service"
@@ -41,7 +41,7 @@ Vagrant.configure("2") do |config|
         end
         frontend.vm.hostname = "frontend.bcit.local"
 	frontend.vm.network "private_network", ip: "192.168.150.11"
-        frontend.vm.network "forwarded_port", guest: 80, host: 8090
+        frontend.vm.network "forwarded_port", guest: 80, host: 8080
         frontend.vm.provision "file", source: "./files/frontend/default", destination: "/home/vagrant/default"
         frontend.vm.provision "file", source: "./files/frontend/http-common.js", destination: "/home/vagrant/http-common.js"
         frontend.vm.provision "shell", path: "./files/frontend/frontend_setup.sh"

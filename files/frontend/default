@@ -52,7 +52,7 @@ server {
         }
 
 	location /api {
-		proxy_pass http://localhost:8080;
+		proxy_pass http://192.168.150.10:8080;
 	}
 
         # pass PHP scripts to FastCGI server
