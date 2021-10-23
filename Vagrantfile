@@ -1,11 +1,3 @@
-$script = <<-SCRIPT
-sudo mv deploy.service /etc/systemd/system/deploy.service
-sudo systemctl daemon-reload
-sudo systemctl enable deploy
-sudo systemctl start deploy
-sudo systemctl restart nginx
-SCRIPT
-
 Vagrant.configure("2") do |config|
     config.vm.box = "ubuntu/focal64"
 
@@ -24,10 +16,13 @@ Vagrant.configure("2") do |config|
             vb.name = "BACKEND"
             vb.memory = 1536
         end
+        backend.vm.hostname = "backend.bcit.local"
+        backend.vm.network "private_network", ip: "192.168.150.10"
+        backend.vm.network "forwarded_port", guest: 3306, host: 12002
         backend.vm.provision "ansible" do |ansible|
             ansible.playbook = "backend.yaml"
+            ansible.playbook = "db.yaml"
         end
-
     end
 
     config.vm.define "frontend" do |frontend|
@@ -36,7 +31,7 @@ Vagrant.configure("2") do |config|
             vb.memory = 2048
         end
         frontend.vm.hostname = "frontend.bcit.local"
-	    frontend.vm.network "private_network", ip: "192.168.150.11"
+            frontend.vm.network "private_network", ip: "192.168.150.11"
         frontend.vm.network "forwarded_port", guest: 80, host: 8080
         frontend.vm.provision "ansible" do |ansible|
             ansible.playbook = "frontend.yaml"
