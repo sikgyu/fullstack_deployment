@@ -1,49 +1,62 @@
 ---
 - hosts: backend
   vars:
-    backend_folder: backend
+    backend_folder: /backend
     backend_user: backend
   task:
-    - user:
-        name: { { backend_user } }
-    - name: acl
-      package:
-        name: acl
-        state: present
-    - name: Mysql-server installation
-      become: true
-      package:
-        name: mysql-server
-        state: present
-    - name: create backend user directory
-      become: yes
-      ansible.builtin.file:
-        path: /backend
-        state: directory
-        owner: { { backend_user } }
-        mode: "0755"
     - name: NodeJS installation
       get_url:
-        url: curl -fsSL https://deb.nodesource.com/setup_14.x
-        dest: /home/vagrant/install_nodejs.sh
+      url: https://deb.nodesource.com/setup_14.x
+      dest: /home/vagrant/install_nodejs.sh
       register: nodejs_download_script
     - name: Run nodejs script
       become: true
       shell: bash /home/vagrant/install_nodejs.sh
       when: nodejs_download_script.changed
+    - name: Make sure that NodeJs is installed
+      become: true
+      package:
+        name: nodejs
+        state: present
+    - name: Make sure the backend user exists
+      user:
+        name: "{{ backend_user }}"
+    - name: acl
+      package:
+        name: acl
+        state: present
+    - name: create backend user directory
+      become: yes
+      become_user: "{{ backend_user }}"
+      ansible.builtin.file:
+        path: "{{ backend_folder }}}"
+        state: directory
+        owner: "{{ backend_user }}"
+        mode: "0755"
+    - name: Git repo cloning
+      git:
+        repo: https://github.com/bezkoder/nodejs-express-sequelize-mysql.git
+        force: yes
+        dest: "{{ backend_folder }}"
+    - name: Install packages for the backend app
+      community.general.npm:
+        path: "{{ backend_folder }}"
+
+    - name: Mysql-server installation
+      become: true
+      package:
+        name: mysql-server
+        state: present
+
+
+
     - name: Nginx installation
       become: true
       package:
         name: nginx
         state: present
-    - name: Git repo cloning
-      git:
-        repo: https://github.com/bezkoder/nodejs-express-sequelize-mysql.git
-        force: yes
-        dest: /home/vagrant/{{ backend_folder }}
-    - name: Install packages for the backend app
-      community.general.npm:
-        path: /home/vagrant/{{ backend_folder }}
+
+
     - name: config deploy service
       become: true
       template:
